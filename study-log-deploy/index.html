@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Study Log</title>
+<style>
+:root{--bg:#000;--fg:#fff;--mute:#8a8a8a;--card:#111;--line:#2a2a2a;--btn:#fff;--btnfg:#000;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#fafafa;--fg:#111;--mute:#777;--card:#fff;--line:#ddd;--btn:#111;--btnfg:#fff}}
+:root[data-theme="light"]{--bg:#fafafa;--fg:#111;--mute:#777;--card:#fff;--line:#ddd;--btn:#111;--btnfg:#fff}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:"Helvetica Neue",Arial,"Hiragino Sans","Noto Sans JP",sans-serif;padding:16px;max-width:960px;margin-inline:auto}
+button,input,select{font:inherit;color:inherit}
+.timer{text-align:center;padding:24px 0 8px}
+.big{font-size:clamp(48px,13vw,130px);font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1}
+.task{margin:16px auto 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.task input{background:transparent;border:1px solid var(--line);border-radius:12px;padding:10px 14px;width:min(260px,100%);text-align:center}
+.chips{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.chip{border:1px solid var(--line);background:transparent;border-radius:99px;padding:4px 12px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--fg)}
+.ctrl{display:flex;gap:10px;justify-content:center;margin-top:18px}
+.btn{border:1px solid var(--fg);background:transparent;border-radius:14px;padding:12px 26px;font-weight:700;cursor:pointer}
+.btn.main{background:var(--btn);color:var(--btnfg);min-width:130px}
+.btn:disabled{opacity:.35;cursor:default}
+.cal,.detail{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:22px}
+.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.head b{font-size:18px}
+.nav{background:none;border:1px solid var(--line);border-radius:10px;width:36px;height:36px;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.dow{font-size:11px;color:var(--mute);text-align:center}
+.day{aspect-ratio:1/1;border-radius:10px;border:1px solid transparent;background:transparent;cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;padding:2px}
+.day small{font-size:10px;opacity:.85}
+.day.today{border-color:var(--mute)}
+.day.sel{border-color:var(--fg);border-width:2px}
+.day.empty{visibility:hidden}
+.lv0{background:var(--line);color:var(--mute);background:color-mix(in srgb,var(--line) 50%,transparent)}
+.lv1{background:#1f6f43;color:#fff}.lv2{background:#2da44e;color:#fff}.lv3{background:#4cc26d;color:#000}.lv4{background:#8be9a0;color:#000}
+.sum{display:flex;gap:18px;flex-wrap:wrap;color:var(--mute);font-size:13px;margin-top:10px}
+.sum b{color:var(--fg);font-size:15px}
+h3{margin:0 0 4px;font-size:20px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px}
+@media(max-width:640px){.row2{grid-template-columns:1fr}}
+.sec{font-size:12px;color:var(--mute);margin-bottom:8px;letter-spacing:.05em}
+.donutw{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.donut{width:150px;height:150px;border-radius:50%;flex:none;position:relative}
+.donut::after{content:"";position:absolute;inset:28px;border-radius:50%;background:var(--card)}
+.leg{font-size:13px;display:grid;gap:5px;flex:1;min-width:140px}
+.leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+.hours{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;align-items:end;height:130px}
+.hours div{background:var(--fg);border-radius:3px 3px 0 0;min-height:2px;opacity:.9}
+.hours div.z{opacity:.15}
+.hl{display:flex;justify-content:space-between;font-size:10px;color:var(--mute);margin-top:4px}
+.sess{display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid var(--line);padding:9px 0;font-size:14px}
+.sess span.t{color:var(--mute);font-size:12px}
+.sess button{background:none;border:none;color:var(--mute);cursor:pointer;font-size:16px}
+.note{color:var(--mute);font-size:12px;margin:22px 0 8px;text-align:center}
+.tools{display:flex;gap:8px;justify-content:center}
+.tools button{background:none;border:1px solid var(--line);border-radius:10px;padding:6px 12px;font-size:12px;cursor:pointer}
+/* # 追加: フォーカス表示・週グラフ・累計・目標・手動追加 */
+.prog{margin-top:10px;color:var(--mute);font-size:14px}.prog b{color:var(--fg)}
+.pbar{height:6px;border-radius:9px;background:var(--line);margin:8px auto 0;max-width:320px;overflow:hidden}.pbar div{height:100%;background:#4cc26d}
+.ftask{display:none;margin-top:14px;font-size:20px;color:var(--mute)}
+.focus .cal,.focus .detail,.focus .note,.focus .tools,.focus .chips,.focus .task,.focus #bk{display:none!important}
+.focus .ftask{display:block}.focus .timer{padding-top:18vh}.focus .big{font-size:clamp(56px,17vw,190px)}
+.wk{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:8px}
+.wb{cursor:pointer;text-align:center}.wv{font-size:11px;min-height:15px;color:var(--mute)}
+.wc{height:120px;position:relative;display:flex;align-items:flex-end;background:color-mix(in srgb,var(--line) 40%,transparent);border-radius:8px;overflow:hidden}
+.wf{width:100%;background:#4cc26d;border-radius:6px 6px 0 0}.gl{position:absolute;left:0;right:0;border-top:2px dashed var(--fg);opacity:.6}
+.wl{font-size:11px;color:var(--mute);margin-top:4px}
+.at{margin-top:10px;font-size:14px}.atn{display:flex;justify-content:space-between}.atb{height:8px;background:var(--line);border-radius:9px;margin-top:4px;overflow:hidden}.atb div{height:100%;border-radius:9px}
+.addf{display:flex;gap:6px;flex-wrap:wrap}.addf input{background:transparent;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+/* # 追加: ミリ秒の小さい表示・テーマボタン */
+.big small{font-size:.42em;letter-spacing:0;opacity:.7}
+option{background:var(--card);color:var(--fg)}
+.themebar{text-align:right}.focus .themebar{display:none}
+/* # 追加: PC用の2カラム（左=タイマー、右=カレンダー・統計） */
+.tools{flex-wrap:wrap}
+@media(min-width:900px){
+body{max-width:1200px;padding:28px}
+.layout{display:grid;grid-template-columns:minmax(360px,5fr) minmax(460px,6fr);gap:32px;align-items:start}
+.left{position:sticky;top:20px}
+.timer{padding-top:40px}
+.big{font-size:clamp(44px,6vw,88px);white-space:nowrap}
+.right>:first-child{margin-top:0}
+}
+.focus .layout{display:block}.focus .left{position:static}.focus .right{display:none}
+</style>
+</head>
+<body>
+<div class="themebar"><select id="langSel" class="chip"><option value="ja">日本語</option><option value="en">English</option></select> <!-- # 追加 -->
+<button class="chip" id="themeBtn">テーマ: 自動</button></div> <!-- # 追加 -->
+<div class="layout"><div class="left"><div class="timer"> <!-- # 追加: layout/left -->
+  <div class="big" id="big">00:00:00</div>
+  <div class="ftask" id="ftask"></div><div class="prog" id="prog"></div> <!-- # 追加 -->
+  <div class="task"><input id="task" placeholder="いま取り組むタスク（例：英語・ミクロ経済）" maxlength="40"></div>
+  <div class="chips" id="chips"></div>
+  <div class="ctrl">
+    <button class="btn main" id="startBtn">Start</button>
+    <button class="btn" id="stopBtn" disabled>Finish</button>
+    <button class="btn" id="focusBtn" title="タイマーだけ表示">Focus</button> <!-- # 追加 -->
+  </div>
+</div>
+
+</div><div class="right"><div class="cal"> <!-- # 追加: left閉じ・right開始 -->
+  <div class="head"><button class="nav" id="prev">‹</button><b id="mlabel"></b><button class="nav" id="next">›</button><button class="nav" id="fold" title="カレンダーを開閉">▾</button></div> <!-- # 変更 -->
+  <div id="calbody"> <!-- # 追加 -->
+  <div class="grid" id="dows"></div>
+  <div class="grid" id="cells" style="margin-top:5px"></div></div> <!-- # 変更: calbodyを閉じる -->
+  <div class="sum" id="msum"></div>
+</div>
+
+<div class="detail" id="detail"></div>
+<div class="detail" id="week"></div><div class="detail" id="alltask"></div></div></div> <!-- # 変更: right/layoutを閉じる -->
+
+<p class="note" id="note">データはこのブラウザ内に保存されます。端末を変える前にバックアップを。</p>
+<div class="tools"><button id="linkBtn"></button><button id="exp">バックアップ(JSON)を表示</button><button id="imp">復元</button></div>
+<div class="note" id="syncst" style="margin:10px 0 0"></div> <!-- # 追加 -->
+<textarea id="bk" style="display:none;width:100%;height:120px;margin-top:10px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:8px"></textarea>
+
+<script>
+const KEY="studylog.v1", TKEY="studylog.timer";
+const COLORS=["#4cc26d","#58a6ff","#f0b429","#ff7b72","#bc8cff","#39d0d0","#ff9bce","#a5d6a7"];
+let sessions=[], timer={running:false,startedAt:0,acc:0};
+try{sessions=JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){}
+try{timer=Object.assign(timer,JSON.parse(localStorage.getItem(TKEY)||"{}"))}catch(e){}
+const $=id=>document.getElementById(id);
+// # 追加: 多言語対応（言語を増やすときは I18N に辞書を足すだけ）
+let lang="ja";
+const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const I18N={
+ja:{ph_task:"いま取り組むタスク（例：英語・ミクロ経済）",h:(h,m)=>h+"時間"+(m?m+"分":""),m:m=>m+"分",month:(y,m)=>y+"年 "+m+"月",dow:["日","月","火","水","木","金","土"],m_total:"今月の合計",m_days:"勉強した日",m_avg:"1日平均",dayn:d=>d+"日",date:(y,m,d)=>y+"年"+m+"月"+d+"日",no_rec:"この日の記録はまだありません。",d_total:"合計",d_first:"最初に始めた時刻",d_count:"セッション数",sec_task:"タスク別の時間",sec_hours:"何時台に勉強した？（分布）",hr_tip:(i,v)=>i+"時台: "+v,sec_list:"セッション一覧",del_ask:"削除する？",sec_add:"手動で記録を追加",ph_name:"タスク名",ph_min:"分",add:"追加",week_title:"ここ7日間",goal_label:"1日の目標",goal_hint:"分（0で無し）",w_total:"合計",all_title:"タスク別の累計（全期間）",today:"今日",goal_word:"目標",theme:"テーマ",th_auto:"自動",th_light:"ライト",th_dark:"ダーク",note:"データはこのブラウザ内に保存されます。端末を変える前にバックアップを。",exp:"バックアップ(JSON)を表示",imp:"復元",imp_ph:"バックアップのJSONを貼り付けてもう一度「復元」を押す",imp_err:"読み込めませんでした",uncat:"未分類",link_btn:"マイリンクをコピー",link_copied:"コピーしました。このリンクを開けば、どのブラウザでも同じ記録を見られます（他の人には教えないでください）",sync_ok:"同期済み：マイリンクで別のブラウザからも見られます",sync_off:"サーバー保存は使えない環境です（このブラウザ内のみ保存）",sync_err:"同期に失敗しました。通信状況を確認してください"},
+en:{ph_task:"What are you working on? (e.g. Math)",h:(h,m)=>h+"h"+(m?" "+m+"m":""),m:m=>m+"m",month:(y,m)=>MON[m-1]+" "+y,dow:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],m_total:"This month",m_days:"Days studied",m_avg:"Daily avg",dayn:d=>d+(d===1?" day":" days"),date:(y,m,d)=>MON[m-1]+" "+d+", "+y,no_rec:"No sessions recorded on this day.",d_total:"Total",d_first:"First started",d_count:"Sessions",sec_task:"Time by task",sec_hours:"When did you study? (by hour)",hr_tip:(i,v)=>i+":00 – "+v,sec_list:"Sessions",del_ask:"Delete?",sec_add:"Add a session manually",ph_name:"Task",ph_min:"min",add:"Add",week_title:"Last 7 days",goal_label:"Daily goal",goal_hint:"min (0 = none)",w_total:"Total",all_title:"Time by task (all time)",today:"Today",goal_word:"goal",theme:"Theme",th_auto:"Auto",th_light:"Light",th_dark:"Dark",note:"Data is stored in this browser only. Back it up before switching devices.",exp:"Show backup (JSON)",imp:"Restore",imp_ph:"Paste your backup JSON, then press Restore again",imp_err:"Couldn't read that backup",uncat:"Uncategorized",link_btn:"Copy my link",link_copied:"Copied. Open this link in any browser to see the same records (keep it private).",sync_ok:"Synced. Your personal link works in any browser.",sync_off:"Server saving isn't available here (saved in this browser only)",sync_err:"Sync failed. Please check your connection."}
+};
+const tr=(k,...a)=>{const v=(I18N[lang]&&I18N[lang][k])??I18N.en[k];return typeof v==="function"?v(...a):v};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(sessions))}catch(e){}schedulePush()}; // # 変更: サーバー同期
+const saveT=()=>{try{localStorage.setItem(TKEY,JSON.stringify(timer))}catch(e){}};
+const pad=n=>String(n).padStart(2,"0");
+const dkey=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+// # 変更: hms → fmt（1時間以上のときだけ「時間」を表示、ミリ秒つき）
+let lastSec=-1;
+const fmt=ms=>{const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s/60)%60;return (h?h+":":"")+(h?pad(m):pad(m))+":"+pad(s%60)+"<small>."+Math.floor(ms%1000/100)/* # 変更: ミリ秒は1桁 */+"</small>"};
+const dur=ms=>{const m=Math.round(ms/60000);return m>=60?tr("h",Math.floor(m/60),m%60):tr("m",m)}; // # 変更: 多言語化
+const colorOf=t=>{const names=[...new Set(sessions.map(s=>s.task))].sort();return COLORS[Math.max(0,names.indexOf(t))%COLORS.length]};
+let view=new Date(); view.setDate(1);
+let sel=dkey(new Date());
+const elapsed=()=>timer.acc+(timer.running?Date.now()-timer.startedAt:0);
+
+function tick(){
+  $("big").innerHTML=fmt(elapsed()); // # 変更
+  $("startBtn").textContent=timer.running?"Pause":(timer.acc>0?"Resume":"Start");
+  $("stopBtn").disabled=elapsed()<1000;
+  const sc=Math.floor(elapsed()/1000);if(sc!==lastSec){lastSec=sc;renderProg()} // # 変更: 1秒に1回だけ更新
+}
+$("startBtn").onclick=()=>{
+  if(timer.running){timer.acc+=Date.now()-timer.startedAt;timer.running=false}
+  else{timer.startedAt=Date.now();timer.running=true;if(!timer.sessionStart)timer.sessionStart=Date.now()}
+  saveT();tick();
+};
+$("stopBtn").onclick=()=>{
+  const ms=elapsed(); if(ms<1000)return;
+  const name=$("task").value.trim()||tr("uncat"); // # 変更
+  const start=timer.sessionStart||Date.now()-ms;
+  sessions.push({id:Date.now(),task:name,start:start,ms:ms});
+  save();
+  timer={running:false,startedAt:0,acc:0};saveT();
+  sel=dkey(new Date(start));view=new Date(start);view.setDate(1);
+  tick();render();
+};
+setInterval(tick,50); // # 変更: ミリ秒表示のため
+
+function renderChips(){
+  const recent=[...new Set(sessions.slice().reverse().map(s=>s.task))].slice(0,6);
+  $("chips").innerHTML="";
+  recent.forEach(t=>{const b=document.createElement("button");b.className="chip";b.textContent=t;b.onclick=()=>{$("task").value=t};$("chips").appendChild(b)});
+}
+
+function byDay(){const m={};sessions.forEach(s=>{const k=dkey(new Date(s.start));m[k]=(m[k]||0)+s.ms});return m}
+
+function renderCal(){
+  const y=view.getFullYear(),mo=view.getMonth();
+  $("mlabel").textContent=tr("month",y,mo+1); // # 変更
+  $("dows").innerHTML=tr("dow").map(d=>'<div class="dow">'+d+"</div>").join("");
+  const first=new Date(y,mo,1).getDay(), n=new Date(y,mo+1,0).getDate();
+  const totals=byDay(), todayK=dkey(new Date());
+  let html="",monthTotal=0,days=0;
+  for(let i=0;i<first;i++)html+='<div class="day empty"></div>';
+  for(let d=1;d<=n;d++){
+    const k=y+"-"+pad(mo+1)+"-"+pad(d), t=totals[k]||0, h=t/3600000;
+    if(t>0){monthTotal+=t;days++}
+    const lv=t===0?0:h<1?1:h<2?2:h<4?3:4;
+    html+='<button class="day lv'+lv+(k===todayK?" today":"")+(k===sel?" sel":"")+'" data-k="'+k+'">'+d+(t?"<small>"+(h>=1?h.toFixed(1)+"h":Math.round(t/60000)+"m")+"</small>":"")+"</button>";
+  }
+  $("cells").innerHTML=html;
+  $("cells").querySelectorAll(".day[data-k]").forEach(b=>b.onclick=()=>{sel=b.dataset.k;render()});
+  $("msum").innerHTML="<span>"+tr("m_total")+" <b>"+dur(monthTotal)+"</b></span><span>"+tr("m_days")+" <b>"+tr("dayn",days)+"</b></span>"+(days?"<span>"+tr("m_avg")+" <b>"+dur(monthTotal/days)+"</b></span>":""); // # 変更
+}
+
+function renderDetail(){
+  const list=sessions.filter(s=>dkey(new Date(s.start))===sel).sort((a,b)=>a.start-b.start);
+  const [Y,M,D]=sel.split("-").map(Number);
+  const total=list.reduce((a,s)=>a+s.ms,0);
+  let h='<h3>'+tr("date",Y,M,D)+"</h3>"; // # 変更
+  if(!list.length){$("detail").innerHTML=h+'<div class="sum">'+tr("no_rec")+'</div>';return}
+  const firstStart=new Date(list[0].start);
+  h+='<div class="sum"><span>'+tr("d_total")+' <b>'+dur(total)+'</b></span><span>'+tr("d_first")+' <b>'+pad(firstStart.getHours())+":"+pad(firstStart.getMinutes())+'</b></span><span>'+tr("d_count")+' <b>'+list.length+"</b></span></div>";
+  // per-task
+  const tt={};list.forEach(s=>tt[s.task]=(tt[s.task]||0)+s.ms);
+  const arr=Object.entries(tt).sort((a,b)=>b[1]-a[1]);
+  let acc=0;const stops=arr.map(([t,v])=>{const a=acc/total*360;acc+=v;return colorOf(t)+" "+a+"deg "+(acc/total*360)+"deg"}).join(",");
+  const leg=arr.map(([t,v])=>'<div><i style="background:'+colorOf(t)+'"></i>'+esc(t)+" — <b>"+dur(v)+"</b> ("+Math.round(v/total*100)+"%)</div>").join("");
+  // hourly
+  const hr=new Array(24).fill(0);
+  list.forEach(s=>{let t=s.start,end=s.start+s.ms;while(t<end){const d=new Date(t);const next=new Date(d.getFullYear(),d.getMonth(),d.getDate(),d.getHours()+1).getTime();const seg=Math.min(end,next)-t;hr[d.getHours()]+=seg;t=Math.min(end,next)}});
+  const mx=Math.max(...hr);
+  const bars=hr.map((v,i)=>'<div class="'+(v?"":"z")+'" style="height:'+(v?Math.max(4,v/mx*100):0)+'%" title="'+tr("hr_tip",i,dur(v))+'"></div>').join("");
+  h+='<div class="row2"><div><div class="sec">'+tr("sec_task")+'</div><div class="donutw"><div class="donut" style="background:conic-gradient('+stops+')"></div><div class="leg">'+leg+'</div></div></div>'+
+     '<div><div class="sec">'+tr("sec_hours")+'</div><div class="hours">'+bars+'</div><div class="hl"><span>0:00</span><span>6:00</span><span>12:00</span><span>18:00</span><span>23:00</span></div></div></div>';
+  h+='<div class="sec" style="margin-top:18px">'+tr("sec_list")+'</div>';
+  list.forEach(s=>{const a=new Date(s.start),b=new Date(s.start+s.ms);
+    h+='<div class="sess"><div><i style="display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;background:'+colorOf(s.task)+'"></i>'+esc(s.task)+'<br><span class="t">'+pad(a.getHours())+":"+pad(a.getMinutes())+" – "+pad(b.getHours())+":"+pad(b.getMinutes())+'</span></div><div><b>'+dur(s.ms)+'</b> <button data-id="'+s.id+'" title="削除">×</button></div></div>'});
+  $("detail").innerHTML=h;
+  // # 変更: confirm()はこのページ内で動かず削除できなかったため、2回押す方式に
+  $("detail").querySelectorAll("button[data-id]").forEach(b=>b.onclick=()=>{
+    if(b.dataset.arm){sessions=sessions.filter(s=>s.id!=b.dataset.id);save();render();return}
+    b.dataset.arm="1";b.textContent=tr("del_ask");b.style.color="#ff7b72";
+    setTimeout(()=>{if(b.isConnected){delete b.dataset.arm;b.textContent="×";b.style.color=""}},3000);
+  });
+}
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function render(){renderCal();renderDetail();addForm();renderChips();renderWeek();renderAllTask();renderProg()} // # 変更
+
+$("prev").onclick=()=>{view.setMonth(view.getMonth()-1);renderCal()};
+$("next").onclick=()=>{view.setMonth(view.getMonth()+1);renderCal()};
+// # 追加: 目標・週グラフ・累計・手動追加・開閉・フォーカス
+let goal=0;try{goal=+localStorage.getItem("studylog.goal")||0}catch(e){}
+function renderProg(){
+  const t=(byDay()[dkey(new Date())]||0)+elapsed(), g=goal*60000;
+  $("prog").innerHTML=tr("today")+" <b>"+dur(t)+"</b>"+(g?" / "+tr("goal_word")+" "+dur(g)+" ("+Math.min(100,Math.round(t/g*100))+"%)<div class=\"pbar\"><div style=\"width:"+Math.min(100,t/g*100)+"%\"></div></div>":"");
+  $("ftask").textContent=$("task").value.trim();
+}
+function renderWeek(){
+  const tot=byDay(),days=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(d)}
+  const vals=days.map(d=>tot[dkey(d)]||0),mx=Math.max(...vals,goal*60000,1),sum=vals.reduce((a,b)=>a+b,0);
+  const bars=days.map((d,i)=>'<div class="wb" data-k="'+dkey(d)+'"><div class="wv">'+(vals[i]?dur(vals[i]):"")+'</div><div class="wc"><div class="wf" style="height:'+vals[i]/mx*100+'%"></div>'+(goal?'<div class="gl" style="bottom:'+goal*60000/mx*100+'%"></div>':"")+'</div><div class="wl">'+(d.getMonth()+1)+"/"+d.getDate()+"("+tr("dow")[d.getDay()]+")</div></div>").join("");
+  $("week").innerHTML='<div class="head"><b>'+tr("week_title")+'</b><span style="font-size:13px;color:var(--mute)">'+tr("goal_label")+' <input id="goal" type="number" min="0" step="15" value="'+goal+'" style="width:64px;background:transparent;border:1px solid var(--line);border-radius:8px;padding:4px"> '+tr("goal_hint")+'</span></div><div class="wk">'+bars+'</div><div class="sum"><span>'+tr("w_total")+' <b>'+dur(sum)+'</b></span><span>'+tr("m_avg")+' <b>'+dur(sum/7)+'</b></span></div>';
+  $("week").querySelectorAll(".wb").forEach(b=>b.onclick=()=>{sel=b.dataset.k;view=new Date(sel+"T00:00:00");view.setDate(1);render()});
+  $("goal").onchange=ev=>{goal=Math.max(0,+ev.target.value||0);try{localStorage.setItem("studylog.goal",goal)}catch(err){}schedulePush();renderWeek();renderProg()};
+}
+function renderAllTask(){
+  const tt={};sessions.forEach(s=>tt[s.task]=(tt[s.task]||0)+s.ms);
+  const arr=Object.entries(tt).sort((a,b)=>b[1]-a[1]);
+  if(!arr.length){$("alltask").innerHTML="";return}
+  $("alltask").innerHTML='<div class="head"><b>'+tr("all_title")+'</b></div>'+arr.map(([t,v])=>'<div class="at"><div class="atn"><span>'+esc(t)+'</span><b>'+dur(v)+'</b></div><div class="atb"><div style="width:'+v/arr[0][1]*100+'%;background:'+colorOf(t)+'"></div></div></div>').join("");
+}
+function addForm(){
+  $("detail").insertAdjacentHTML("beforeend",'<div class="sec" style="margin-top:18px">'+tr("sec_add")+'</div><div class="addf"><input id="mt" placeholder="'+tr("ph_name")+'" maxlength="40"><input id="mh" type="time" value="09:00"><input id="mm" type="number" min="1" max="1440" placeholder="'+tr("ph_min")+'" style="width:70px"><button class="btn" id="madd" style="padding:8px 16px">'+tr("add")+'</button></div>');
+  $("madd").onclick=()=>{
+    const m=+$("mm").value,tm=$("mh").value;if(!(m>0)||!tm)return;
+    const [Y,M,D]=sel.split("-").map(Number),[hh,mi]=tm.split(":").map(Number);
+    sessions.push({id:Date.now(),task:$("mt").value.trim()||tr("uncat"),start:new Date(Y,M-1,D,hh,mi).getTime(),ms:m*60000});save();render();
+  };
+}
+let folded=false;try{folded=localStorage.getItem("studylog.fold")==="1"}catch(e){}
+function applyFold(){$("calbody").style.display=folded?"none":"";$("fold").textContent=folded?"▸":"▾"}
+$("fold").onclick=()=>{folded=!folded;try{localStorage.setItem("studylog.fold",folded?"1":"0")}catch(e){}applyFold()};
+applyFold();
+function setFocus(on){document.body.classList.toggle("focus",on);$("focusBtn").textContent=on?"Exit":"Focus"}
+$("focusBtn").onclick=()=>setFocus(!document.body.classList.contains("focus"));
+document.addEventListener("keydown",e=>{if(e.key==="Escape")setFocus(false)});
+$("task").addEventListener("input",renderProg);
+// # 追加: テーマ切替（自動→ライト→ダーク）
+let theme="auto";try{theme=localStorage.getItem("studylog.theme")||"auto"}catch(e){}
+function applyTheme(){const r=document.documentElement;if(theme==="auto")r.removeAttribute("data-theme");else r.setAttribute("data-theme",theme);$("themeBtn").textContent=tr("theme")+": "+tr("th_"+theme)}
+$("themeBtn").onclick=()=>{theme={auto:"light",light:"dark",dark:"auto"}[theme];try{localStorage.setItem("studylog.theme",theme)}catch(e){}applyTheme()};
+applyTheme();
+// # 追加: 言語の自動判定と手動切替
+try{lang=localStorage.getItem("studylog.lang")}catch(e){}
+if(!I18N[lang])lang=(navigator.language||"en").toLowerCase().startsWith("ja")?"ja":"en";
+function applyLang(){document.documentElement.lang=lang;$("langSel").value=lang;$("task").placeholder=tr("ph_task");$("note").textContent=tr("note");$("exp").textContent=tr("exp");$("imp").textContent=tr("imp");$("linkBtn").textContent=tr("link_btn");setSyncState(syncState);applyTheme()}
+$("langSel").onchange=e=>{lang=e.target.value;try{localStorage.setItem("studylog.lang",lang)}catch(err){}applyLang();render()};
+applyLang();
+// # 追加: マイリンク同期（/api/log が無い環境では、これまで通りこのブラウザ内だけで動く）
+var syncState="";
+function setSyncState(s){syncState=s;$("syncst").textContent=s?tr("sync_"+s):""}
+function newKey(){const a=new Uint8Array(24);crypto.getRandomValues(a);return Array.from(a,x=>x.toString(16).padStart(2,"0")).join("")}
+let syncKey=null,synced=false,dirty=false,pushTimer=null;
+{
+  const m=(location.hash||"").match(/k=([a-f0-9]{32,64})/);
+  try{syncKey=m?m[1]:localStorage.getItem("studylog.key")}catch(e){syncKey=m?m[1]:null}
+  if(!syncKey)syncKey=newKey();
+  try{localStorage.setItem("studylog.key",syncKey)}catch(e){}
+  try{history.replaceState(null,"","#k="+syncKey)}catch(e){}
+}
+const myLink=()=>location.href.split("#")[0]+"#k="+syncKey;
+const clean=a=>a.map(s=>({id:+s.id,task:String(s.task||"").slice(0,40),start:+s.start,ms:+s.ms})).filter(s=>isFinite(s.id)&&isFinite(s.start)&&isFinite(s.ms)&&s.ms>0);
+async function pullServer(){
+  try{
+    const r=await fetch("/api/log?k="+syncKey,{cache:"no-store"});
+    if(!r.ok)throw new Error("no api");
+    const d=await r.json();
+    synced=true;
+    if(Array.isArray(d.sessions)){
+      const srv=clean(d.sessions);
+      if(dirty){const ids=new Set(srv.map(s=>s.id));sessions.forEach(s=>{if(!ids.has(s.id))srv.push(s)});goal=+d.goal||goal}
+      else goal=+d.goal||0;
+      sessions=srv;
+      try{localStorage.setItem(KEY,JSON.stringify(sessions));localStorage.setItem("studylog.goal",goal)}catch(e){}
+      render();
+      if(dirty){dirty=false;pushNow()}
+    }else if(sessions.length||goal)pushNow();
+    setSyncState("ok");
+  }catch(e){setSyncState("off")}
+}
+function schedulePush(){if(!synced)dirty=true;clearTimeout(pushTimer);pushTimer=setTimeout(pushNow,2000)}
+async function pushNow(){
+  pushTimer=null;if(!synced)return;
+  try{const r=await fetch("/api/log",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({k:syncKey,sessions,goal})});setSyncState(r.ok?"ok":"err")}catch(e){setSyncState("err")}
+}
+$("linkBtn").onclick=()=>{const u=myLink();const show=()=>{const t=$("bk");t.style.display="block";t.value=u;t.select()};try{navigator.clipboard.writeText(u).then(()=>{$("syncst").textContent=tr("link_copied")},show)}catch(e){show()}};
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&synced&&!pushTimer)pullServer()});
+pullServer();
+$("exp").onclick=()=>{const t=$("bk");t.style.display="block";t.value=JSON.stringify(sessions);t.select()};
+$("imp").onclick=()=>{const t=$("bk");if(t.style.display==="none"){t.style.display="block";t.value="";t.placeholder=tr("imp_ph");return}
+  try{const a=JSON.parse(t.value);if(Array.isArray(a)){sessions=a;save();render();t.style.display="none"}}catch(e){t.value="";t.placeholder=tr("imp_err")}};
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){} // # 追加: 保存データをブラウザに勝手に消されにくくするよう要求
+tick();render();
+</script>
+</body>
+</html>
