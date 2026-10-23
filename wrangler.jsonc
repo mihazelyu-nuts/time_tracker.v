@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "time-tracker-v",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-19",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./study-log-deploy",
+    "binding": "ASSETS"
+  },
+  "kv_namespaces": [
+    { "binding": "STUDY_KV", "id": "bfa57b24253a4335a4945b144e84781f" }
+  ],
+  "observability": { "enabled": true }
+}
