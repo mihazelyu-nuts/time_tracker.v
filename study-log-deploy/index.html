@@ -150,7 +150,7 @@ function tick(){
   $("big").innerHTML=fmt(elapsed()); // # 変更
   $("startBtn").textContent=timer.running?"Pause":(timer.acc>0?"Resume":"Start");
   $("stopBtn").disabled=elapsed()<1000;
-  const sc=Math.floor(elapsed()/1000);if(sc!==lastSec){lastSec=sc;renderProg()} // # 変更: 1秒に1回だけ更新
+  const sc=Math.floor(elapsed()/1000);if(sc!==lastSec){lastSec=sc;renderProg()} updTitle(); // # 変更: 1秒に1回だけ更新・タブタイトル更新
 }
 $("startBtn").onclick=()=>{
   if(timer.running){timer.acc+=Date.now()-timer.startedAt;timer.running=false}
@@ -236,7 +236,7 @@ $("next").onclick=()=>{view.setMonth(view.getMonth()+1);renderCal()};
 let goal=0;try{goal=+localStorage.getItem("studylog.goal")||0}catch(e){}
 function renderProg(){
   const t=(byDay()[dkey(new Date())]||0)+elapsed(), g=goal*60000;
-  $("prog").innerHTML=tr("today")+" <b>"+dur(t)+"</b>"+(g?" / "+tr("goal_word")+" "+dur(g)+" ("+Math.min(100,Math.round(t/g*100))+"%)<div class=\"pbar\"><div style=\"width:"+Math.min(100,t/g*100)+"%\"></div></div>":"");
+  $("prog").innerHTML=tr("today")+" <b>"+fmtH(t)+"</b>"+(g?" / "+tr("goal_word")+" "+fmtH(g)+" ("+Math.min(100,Math.round(t/g*100))+"%)<div class=\"pbar\"><div style=\"width:"+Math.min(100,t/g*100)+"%\"></div></div>":"");
   $("ftask").textContent=$("task").value.trim();
 }
 function renderWeek(){
@@ -321,6 +321,15 @@ async function pushNow(){
 $("linkBtn").onclick=()=>{const u=myLink();const show=()=>{const t=$("bk");t.style.display="block";t.value=u;t.select()};try{navigator.clipboard.writeText(u).then(()=>{$("syncst").textContent=tr("link_copied")},show)}catch(e){show()}};
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&synced&&!pushTimer)pullServer()});
 pullServer();
+// # 追加: タブのタイトルに経過時間を表示（別タブを見ていてもわかる）
+const BASE_TITLE=document.title;
+const fmtT=ms=>{const s=Math.floor(ms/1000),h=Math.floor(s/3600);return (h?h+":":"")+pad(Math.floor(s/60)%60)+":"+pad(s%60)};
+// # 追加: 「今日の合計」を H:MM:SS のコロン表記に
+function fmtH(ms){const s=Math.floor(ms/1000);return Math.floor(s/3600)+":"+pad(Math.floor(s/60)%60)+":"+pad(s%60)}
+function todayMs(){return (byDay()[dkey(new Date())]||0)+elapsed()}
+function updTitle(){const ms=elapsed();const tt=(timer.running||ms>=1000)?(timer.running?"▶ ":"⏸ ")+fmtT(ms)+" · "+tr("today")+" "+fmtH(todayMs())+" – "+BASE_TITLE:BASE_TITLE;if(document.title!==tt)document.title=tt} // # 変更: タイトルに今日の合計も表示
+// 別タブでブラウザがタイマーを遅くしても、タイトルを更新し続けるための補助（使えない環境では無視）
+try{const w=new Worker(URL.createObjectURL(new Blob(["setInterval(()=>postMessage(0),1000)"],{type:"text/javascript"})));w.onmessage=()=>{if(document.hidden)tick()}}catch(e){}
 // # 変更: バックアップ/復元は削除（マイリンクで代替）
 
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){} // # 追加: 保存データをブラウザに勝手に消されにくくするよう要求
