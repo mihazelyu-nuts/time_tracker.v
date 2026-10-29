@@ -86,17 +86,6 @@ body{max-width:1200px;padding:28px}
 .right>:first-child{margin-top:0}
 }
 .focus .layout{display:block}.focus .left{position:static}.focus .right{display:none}
-/* # 追加: メイン=今日の合計、その下=今回のセッション */
-.lbl{font-size:13px;color:var(--mute);letter-spacing:.05em;margin-bottom:6px}
-.timer{--bigsz:clamp(48px,13vw,130px)}
-.sline{margin-top:14px;font-size:max(20px,calc(var(--bigsz)*.4));font-weight:700;color:var(--fg);cursor:pointer} /* # 変更: 今回のセッションは大きめ・はっきり表示 */
-.sline .lbl{font-size:.4em;font-weight:400;margin:0 6px 0 0;letter-spacing:0;color:var(--mute)} /* # 変更: ラベルだけ小さく */
-.sbig{font-variant-numeric:tabular-nums}
-.big{cursor:pointer}
-@media(min-width:900px){.timer{--bigsz:clamp(44px,6vw,88px)}}
-.focus .timer{--bigsz:clamp(48px,14vw,170px)}
-#lblToday{display:none} /* # 変更: 大きい表示にはラベルを付けず、小さい行にだけ付ける */
-.sbig small{font-size:.8em;opacity:.7}
 
 /* # 変更: フルスクリーンボタンのスタイルを削除 */
 </style>
@@ -105,11 +94,8 @@ body{max-width:1200px;padding:28px}
 <div class="themebar"><select id="langSel" class="chip"><option value="ja">日本語</option><option value="en">English</option></select> <!-- # 追加 -->
 <button class="chip" id="themeBtn">テーマ: 自動</button></div> <!-- # 追加 -->
 <div class="layout"><div class="left"><div class="timer"> <!-- # 追加: layout/left -->
-  <div class="lbl" id="lblToday"></div>
-  <div class="big" id="big">0:00:00</div> <!-- # 変更: メイン表示は今日の合計 -->
-  <div class="prog" id="prog"></div>
-  <div class="sline" id="sline"><span class="lbl" id="lblSess"></span> <span class="sbig" id="sbig">00:00.0</span></div>
-  <div class="ftask" id="ftask"></div> <!-- # 変更: 目標　→ 今回のセッションを追加 -->
+  <div class="big" id="big">00:00:00</div>
+  <div class="ftask" id="ftask"></div><div class="prog" id="prog"></div> <!-- # 変更: 上下入れ替えを廃止し、元の並びに戻した -->
   <div class="task"><input id="task" placeholder="何について取り組む？" maxlength="40"></div>
   <div class="chips" id="chips"></div>
   <div class="ctrl">
@@ -146,11 +132,10 @@ try{timer=Object.assign(timer,JSON.parse(localStorage.getItem(TKEY)||"{}"))}catc
 const $=id=>document.getElementById(id);
 // # 追加: 多言語対応（言語を増やすときは I18N に辞書を足すだけ）
 let lang="ja";
-let swap=false;try{swap=localStorage.getItem("studylog.swap")==="1"}catch(e){} // # 追加: 上下入れ替えの状態
 const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const I18N={
-ja:{ph_task:"何について取り組む？",h:(h,m)=>h+"時間"+(m?m+"分":""),m:m=>m+"分",month:(y,m)=>y+"年 "+m+"月",dow:["日","月","火","水","木","金","土"],m_total:"今月の合計",m_days:"勉強した日",m_avg:"1日平均",dayn:d=>d+"日",date:(y,m,d)=>y+"年"+m+"月"+d+"日",no_rec:"この日の記録はまだありません。",d_total:"合計",d_first:"最初に始めた時刻",d_count:"セッション数",sec_task:"タスク別の時間",sec_hours:"何時台に勉強した？（分布）",hr_tip:(i,v)=>i+"時台: "+v,sec_list:"セッション一覧",del_ask:"削除する？",sec_add:"手動で記録を追加",ph_name:"タスク名",ph_min:"分",add:"追加",week_title:"ここ7日間",goal_label:"1日の目標",goal_hint:"分（0で無し）",w_total:"合計",all_title:"タスク別の累計（全期間）",today:"今日",goal_word:"目標",theme:"テーマ",th_auto:"自動",th_light:"ライト",th_dark:"ダーク",note:"記録はマイリンクに紐づいて保存されます。「マイリンクをコピー」で控えておけば、別のブラウザでも見られます。",exp:"バックアップ(JSON)を表示",imp:"復元",imp_ph:"バックアップのJSONを貼り付けてもう一度「復元」を押す",imp_err:"読み込めませんでした",uncat:"未分類",reset_ask:"記録せず破棄？",swap_hint:"クリックで上下を入れ替え",lbl_today:"今日の合計",lbl_sess:"このセッション",link_btn:"マイリンクをコピー",link_copied:"コピーしました。このリンクを開けば、どのブラウザでも同じ記録を見られます（他の人には教えないでください）",sync_ok:"同期済み：マイリンクで別のブラウザからも見られます",sync_off:"サーバー保存は使えない環境です（このブラウザ内のみ保存）",sync_err:"同期に失敗しました。通信状況を確認してください"},
-en:{ph_task:"What will you work on?",h:(h,m)=>h+"h"+(m?" "+m+"m":""),m:m=>m+"m",month:(y,m)=>MON[m-1]+" "+y,dow:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],m_total:"This month",m_days:"Days studied",m_avg:"Daily avg",dayn:d=>d+(d===1?" day":" days"),date:(y,m,d)=>MON[m-1]+" "+d+", "+y,no_rec:"No sessions recorded on this day.",d_total:"Total",d_first:"First started",d_count:"Sessions",sec_task:"Time by task",sec_hours:"When did you study? (by hour)",hr_tip:(i,v)=>i+":00 – "+v,sec_list:"Sessions",del_ask:"Delete?",sec_add:"Add a session manually",ph_name:"Task",ph_min:"min",add:"Add",week_title:"Last 7 days",goal_label:"Daily goal",goal_hint:"min (0 = none)",w_total:"Total",all_title:"Time by task (all time)",today:"Today",goal_word:"goal",theme:"Theme",th_auto:"Auto",th_light:"Light",th_dark:"Dark",note:"Your records are tied to your personal link. Copy it and keep it to view them in any browser.",exp:"Show backup (JSON)",imp:"Restore",imp_ph:"Paste your backup JSON, then press Restore again",imp_err:"Couldn't read that backup",uncat:"Uncategorized",reset_ask:"Discard?",swap_hint:"Click to swap top and bottom",lbl_today:"Today's total",lbl_sess:"This session",link_btn:"Copy my link",link_copied:"Copied. Open this link in any browser to see the same records (keep it private).",sync_ok:"Synced. Your personal link works in any browser.",sync_off:"Server saving isn't available here (saved in this browser only)",sync_err:"Sync failed. Please check your connection."}
+ja:{ph_task:"何について取り組む？",h:(h,m)=>h+"時間"+(m?m+"分":""),m:m=>m+"分",month:(y,m)=>y+"年 "+m+"月",dow:["日","月","火","水","木","金","土"],m_total:"今月の合計",m_days:"勉強した日",m_avg:"1日平均",dayn:d=>d+"日",date:(y,m,d)=>y+"年"+m+"月"+d+"日",no_rec:"この日の記録はまだありません。",d_total:"合計",d_first:"最初に始めた時刻",d_count:"セッション数",sec_task:"タスク別の時間",sec_hours:"何時台に勉強した？（分布）",hr_tip:(i,v)=>i+"時台: "+v,sec_list:"セッション一覧",del_ask:"削除する？",sec_add:"手動で記録を追加",ph_name:"タスク名",ph_min:"分",add:"追加",week_title:"ここ7日間",goal_label:"1日の目標",goal_hint:"分（0で無し）",w_total:"合計",all_title:"タスク別の累計（全期間）",today:"今日",goal_word:"目標",theme:"テーマ",th_auto:"自動",th_light:"ライト",th_dark:"ダーク",note:"記録はマイリンクに紐づいて保存されます。「マイリンクをコピー」で控えておけば、別のブラウザでも見られます。",exp:"バックアップ(JSON)を表示",imp:"復元",imp_ph:"バックアップのJSONを貼り付けてもう一度「復元」を押す",imp_err:"読み込めませんでした",uncat:"未分類",reset_ask:"記録せず破棄？",link_btn:"マイリンクをコピー",link_copied:"コピーしました。このリンクを開けば、どのブラウザでも同じ記録を見られます（他の人には教えないでください）",sync_ok:"同期済み：マイリンクで別のブラウザからも見られます",sync_off:"サーバー保存は使えない環境です（このブラウザ内のみ保存）",sync_err:"同期に失敗しました。通信状況を確認してください"},
+en:{ph_task:"What will you work on?",h:(h,m)=>h+"h"+(m?" "+m+"m":""),m:m=>m+"m",month:(y,m)=>MON[m-1]+" "+y,dow:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],m_total:"This month",m_days:"Days studied",m_avg:"Daily avg",dayn:d=>d+(d===1?" day":" days"),date:(y,m,d)=>MON[m-1]+" "+d+", "+y,no_rec:"No sessions recorded on this day.",d_total:"Total",d_first:"First started",d_count:"Sessions",sec_task:"Time by task",sec_hours:"When did you study? (by hour)",hr_tip:(i,v)=>i+":00 – "+v,sec_list:"Sessions",del_ask:"Delete?",sec_add:"Add a session manually",ph_name:"Task",ph_min:"min",add:"Add",week_title:"Last 7 days",goal_label:"Daily goal",goal_hint:"min (0 = none)",w_total:"Total",all_title:"Time by task (all time)",today:"Today",goal_word:"goal",theme:"Theme",th_auto:"Auto",th_light:"Light",th_dark:"Dark",note:"Your records are tied to your personal link. Copy it and keep it to view them in any browser.",exp:"Show backup (JSON)",imp:"Restore",imp_ph:"Paste your backup JSON, then press Restore again",imp_err:"Couldn't read that backup",uncat:"Uncategorized",reset_ask:"Discard?",link_btn:"Copy my link",link_copied:"Copied. Open this link in any browser to see the same records (keep it private).",sync_ok:"Synced. Your personal link works in any browser.",sync_off:"Server saving isn't available here (saved in this browser only)",sync_err:"Sync failed. Please check your connection."}
 };
 const tr=(k,...a)=>{const v=(I18N[lang]&&I18N[lang][k])??I18N.en[k];return typeof v==="function"?v(...a):v};
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(sessions))}catch(e){}schedulePush()}; // # 変更: サーバー同期
@@ -167,7 +152,7 @@ let sel=dkey(new Date());
 const elapsed=()=>timer.acc+(timer.running?Date.now()-timer.startedAt:0);
 
 function tick(){
-  const T=fmtD(todayMs()),S=fmt(elapsed());$("big").innerHTML=swap?S:T;$("sbig").innerHTML=swap?T:S; // # 変更: クリックで上下を入れ替え
+  $("big").innerHTML=fmt(elapsed()); // # 変更: 上下入れ替えを廃止
   $("startBtn").textContent=timer.running?"Pause":(timer.acc>0?"Resume":"Start");
   $("stopBtn").disabled=elapsed()<1000;
   $("resetBtn").disabled=elapsed()<=0&&!timer.running; // # 追加
@@ -256,8 +241,8 @@ $("next").onclick=()=>{view.setMonth(view.getMonth()+1);renderCal()};
 // # 追加: 目標・週グラフ・累計・手動追加・開閉・フォーカス
 let goal=0;try{goal=+localStorage.getItem("studylog.goal")||0}catch(e){}
 function renderProg(){
-  const t=todayMs(), g=goal*60000; // # 変更: 計算を共通化
-  $("prog").innerHTML=(g?tr("goal_word")+" <b>"+fmtH(g)+"</b> ("+Math.min(100,Math.round(t/g*100))+"%)<div class=\"pbar\"><div style=\"width:"+Math.min(100,t/g*100)+"%\"></div></div>":"");
+  const t=todayMs(), g=goal*60000; // # 変更: 今日の合計の計算を共通化
+  $("prog").innerHTML=tr("today")+" <b>"+fmtH(t)+"</b>"+(g?" / "+tr("goal_word")+" "+fmtH(g)+" ("+Math.min(100,Math.round(t/g*100))+"%)<div class=\"pbar\"><div style=\"width:"+Math.min(100,t/g*100)+"%\"></div></div>":"");
   $("ftask").textContent=$("task").value.trim();
 }
 function renderWeek(){
@@ -306,7 +291,7 @@ applyTheme();
 // # 追加: 言語の自動判定と手動切替
 try{lang=localStorage.getItem("studylog.lang")}catch(e){}
 if(!I18N[lang])lang=(navigator.language||"en").toLowerCase().startsWith("ja")?"ja":"en";
-function applyLang(){document.documentElement.lang=lang;$("langSel").value=lang;$("task").placeholder=tr("ph_task");$("note").textContent=tr("note");/* # 変更: exp/impの文言設定を削除 */$("linkBtn").textContent=tr("link_btn");applySwap();setSyncState(syncState);applyTheme()}
+function applyLang(){document.documentElement.lang=lang;$("langSel").value=lang;$("task").placeholder=tr("ph_task");$("note").textContent=tr("note");/* # 変更: exp/impの文言設定を削除 */$("linkBtn").textContent=tr("link_btn");setSyncState(syncState);applyTheme()}
 $("langSel").onchange=e=>{lang=e.target.value;try{localStorage.setItem("studylog.lang",lang)}catch(err){}applyLang();render()};
 applyLang();
 // # 追加: マイリンク同期（/api/log が無い環境では、これまで通りこのブラウザ内だけで動く）
@@ -357,8 +342,6 @@ function fmtH(ms){const s=Math.floor(ms/1000);return Math.floor(s/3600)+":"+pad(
 // # 変更: 今日の保存済み合計をキャッシュ（50msごとに再計算しないように）
 let _tk="",_tv=0;
 function todayMs(){const k=sessions.length+"|"+sessions.reduce((a,s)=>a+s.ms,0)+"|"+dkey(new Date());if(k!==_tk){_tk=k;_tv=byDay()[dkey(new Date())]||0}return _tv+elapsed()}
-// # 追加: メイン表示用（時:分:秒.ミリ秒1桁）
-function fmtD(ms){const s=Math.floor(ms/1000);return Math.floor(s/3600)+":"+pad(Math.floor(s/60)%60)+":"+pad(s%60)+"<small>."+Math.floor(ms%1000/100)+"</small>"}
 function updTitle(){const ms=elapsed();const tt=(timer.running||ms>=1000)?(timer.running?"▶ ":"⏸ ")+fmtT(ms)+" · "+tr("today")+" "+fmtH(todayMs())+" – "+BASE_TITLE:BASE_TITLE;if(document.title!==tt)document.title=tt} // # 変更: タイトルに今日の合計も表示
 // 別タブでブラウザがタイマーを遅くしても、タイトルを更新し続けるための補助（使えない環境では無視）
 try{const w=new Worker(URL.createObjectURL(new Blob(["setInterval(()=>postMessage(0),1000)"],{type:"text/javascript"})));w.onmessage=()=>{if(document.hidden)tick()}}catch(e){}
@@ -370,16 +353,6 @@ $("resetBtn").onclick=()=>{
   const b=$("resetBtn");b.textContent=tr("reset_ask");b.style.color="#ff7b72";
   resetArm=setTimeout(disarmReset,3000);
 };
-// # 追加: 上下の入れ替え（大きく出すのを「今日の合計」か「このセッション」から選べる。クリックで切替）
-function applySwap(){
-  $("lblToday").textContent=tr(swap?"lbl_sess":"lbl_today");
-  $("lblSess").textContent=tr(swap?"today":"lbl_sess"); // # 変更: 小さい行のラベル（今日 / このセッション）
-  if(swap)$("sline").after($("prog"));else $("big").after($("prog"));
-  $("big").title=$("sline").title=tr("swap_hint");
-}
-function toggleSwap(){swap=!swap;try{localStorage.setItem("studylog.swap",swap?"1":"0")}catch(e){}applySwap();tick()}
-$("big").onclick=$("sline").onclick=toggleSwap;
-applySwap();
 // # 変更: バックアップ/復元は削除（マイリンクで代替）
 
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){} // # 追加: 保存データをブラウザに勝手に消されにくくするよう要求
